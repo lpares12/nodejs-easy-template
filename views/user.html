@@ -1,0 +1,13 @@
+<html>
+<head>
+	<title>EasyTemplate</title>
+</head>
+<body>
+	<p>Hello {{ user.username }}. To log out click <a href="/user/logout">here</a></p>
+	{% if user.isVerified %}
+
+	{% else %}
+	<p>Please verify your account with the email we sent to {{ user.email }}. If you did not receive anything, click <a href="/user/verify/generate">here</a></p>
+	{% endif %}
+</body>
+</html>
