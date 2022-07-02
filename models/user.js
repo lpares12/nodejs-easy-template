@@ -114,7 +114,7 @@ UserSchema.statics.authenticate = function(username, pass, callback){
 		if(err){
 			return callback(err);
 		}else if(!user){
-			var err = new Error('User not found');
+			var err = new Error('Wrong username or password');
 			err.status = 401;
 			return callback(err);
 		}
@@ -123,7 +123,7 @@ UserSchema.statics.authenticate = function(username, pass, callback){
 			if(result === true){
 				return callback(null, user);
 			}else{
-				var err = new Error('Incorrect password');
+				var err = new Error('Wrong username or password');
 				err.status = 400;
 				return callback(err);
 			}

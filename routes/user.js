@@ -5,7 +5,8 @@ const requiresLogin = require('../middleware/requires_login.js');
 const requiresSession = require('../middleware/requires_session.js');
 const redirectOnLogin = require('../middleware/redirect_on_login.js');
 const requiresUnverified = require('../middleware/requires_unverified.js');
-const User = require('../models/user.js');
+const User = require('../apps/user/user.js');
+
 const Token = require('../models/token.js');
 
 const Emailer = require('../email.js');
@@ -31,21 +32,9 @@ router.post('/login', redirectOnLogin, (req, res, next) => {
 	}
 
 	User.authenticate(req.body.user, req.body.pass, function(error, user){
-		if(error || !user){
-			var err = new Error("Wrong username or password");
-			err.status = 401;
-			return next(err);
+		if(err){
+			next(err);
 		}else{
-			user.lastLogin = new Date();
-			//NOTE: We are gonna avoid validation when updating the user
-			//because the validation for password will always fail, since
-			//the password is now salted and hashed.
-			//TODO: Explore if it is better to hardcode this validation
-			//in the registration procedure, instead of in the model,
-			//so we don't have to disable validation every time we update
-			//the user.
-			user.save({ validateBeforeSave: false });
-
 			req.session.userId = user._id;
 			return res.redirect('/user/profile');
 		}
@@ -65,86 +54,53 @@ router.post('/register', redirectOnLogin, (req, res, next) => {
 		registrationDate: new Date(),
 	}
 
-	//Check passwords are matching
-	if(userData['password'] != userData['password2']){
-		var err = new Error('Passwords must match');
-		err.status = 400;
-		return next(err);
-	}
+	User.createUser(userData, async function(err, user){
+		if(err){
+			return next(err);
+		}
 
-	//TODO: Add register date to now to the user
-	User.create(userData, async function(error, user){
-		if(error){
-			return next(error);
-		}else{
+		User.generateToken(user._id, function(err, user, token){
+			if(err){
+				//TODO: Rollback user?
+				return next(err);
+			}
+
 			try{
-				const token = await Token.generateToken(user);
 				sendVerificationEmail(user, token, req.headers.host);
-
 				req.session.userId = user._id;
 			}catch(err){
-				//TODO: Rollback user creation?
+				//TODO: Rollback user?
 				return next(err);
 			}
 
 			return res.redirect("/user/profile");
-		}
+		});
 	});
 })
 
 router.get('/verify/:userId/:tokenId', (req, res, next) => {
-	User.findById(req.params.userId).exec(async function(error, user){
-		if(error || !user){
-			var err = new Error("User not found");
-			err.status = 401;
+	User.validateToken(req.params.userId, req.params.tokenId, function(err, user){
+		if(err){
 			return next(err);
 		}
 
-		try{
-			const found = await Token.validateToken(user._id, req.params.tokenId);
-			if(found){
-				user.isVerified = true;
-				user.save({ validateBeforeSave: false });
-			}
-		}catch(err){
-			var e = new Error('Could not validate token');
-			e.status = 400;
-			return next(e);
-		}
-
-		return res.redirect('/user/login');
+		return res.redirect('/');
 	});
 })
 
 router.get('/verify/generate', requiresSession, (req, res, next) => {
-	User.findById(req.session.userId).exec(async function(error, user){
-		if(error || !user){
-			var err = new Error("Wrong session, remove your cookies and log in again");
-			err.status = 401;
-			return next(err);
-		}else{
-			//TODO: Shall we check the user is not already verified?
-
-			try{
-				await Token.clearUserTokens(user);
-			}catch(error){
-				console.log(error);
-				var err = new Error('Could not clean old tokens');
-				err.status = 400;
-				return next(err);
-			}
-
-			try{
-				const token = await Token.generateToken(user);
-				sendVerificationEmail(user, token, req.headers.host);
-			}catch(err){
-				var err = new Error('Could not generate token');
-				err.status = 400;
-				return next(err);
-			}
-
-			return res.redirect('/user/profile');
+	User.generateToken(req.session.userId, function(err, user, token){
+		if(err){
+			next(err);
 		}
+
+		try{
+			sendVerificationEmail(user, token, req.headers.host);
+		}catch(err){
+			next(err);
+		}
+
+		return res.redirect('/user/profile');
 	});
 })
 
@@ -159,41 +115,29 @@ router.get('/logout', requiresSession, (req, res, next) => {
 })
 
 router.get('/profile', requiresSession, (req, res, next) => {
-	User.findById(req.session.userId).exec(function(err, user){
+	User.getUser(req.session.userId, function(err, user){
 		if(err){
 			return next(err);
 		}else{
-			if(user == null){
-				var err = new Error('Not authorized go back');
-				err.status = 400;
-				return next(err);
-			}else{
-				return res.render('user', {user: user})
-			}
+			return res.render('user', {user: user});
 		}
 	});
 })
 
 router.delete('/delete', requiresLogin, (req, res, next) => {
-	User.findByIdAndRemove(req.session.userId).exec(function(err, user){
+	User.deleteUser(req.session.userId, function(err, user){
 		if(err){
-			return next(error);
-		}
-
-		if(!user){
-			var err = new Error('User not found');
-			err.status = 400;
 			return next(err);
+		}else{
+			//If succeeded destroy session
+			req.session.destroy(function(err){
+				if(err){
+					return next(err);
+				}else{
+					return res.redirect('/');
+				}
+			})
 		}
-
-		//If succeeded destroy session
-		req.session.destroy(function(err){
-			if(err){
-				return next(err);
-			}else{
-				return res.redirect('/');
-			}
-		})
 	});
 })
 
