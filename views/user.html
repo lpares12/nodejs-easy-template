@@ -5,7 +5,7 @@
 <body>
 	<p>Hello {{ user.username }}. To log out click <a href="/user/logout">here</a></p>
 	{% if user.isVerified %}
-
+	<p>If you wish to change your password click <a href="/user/password/generate">here</a></p>
 	{% else %}
 	<p>Please verify your account with the email we sent to {{ user.email }}. If you did not receive anything, click <a href="/user/verify/generate">here</a></p>
 	{% endif %}
