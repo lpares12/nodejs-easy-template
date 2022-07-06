@@ -65,18 +65,19 @@ store.on('error', function(error){
 
 const oneMonth = 1000*60*60*24*30;
 app.use(sessions({
-	secret: "randomsecretkey", //This should be taken from a config file
-	saveUninitialized: true,
+	secret: "randomsecretkey", //TODO: This should be taken from a config file
+	saveUninitialized: false,
 	cookie: {maxAge: oneMonth},
 	resave: false,
 	store: store,
+	unset: 'destroy',
 }));
 
 
 /////
 // Set email
 /////
-emailer = require("./email.js");
+emailer = require("./app/infrastructure/utils/emailer.js");
 try{
 	emailer.setUp();
 }catch(error){

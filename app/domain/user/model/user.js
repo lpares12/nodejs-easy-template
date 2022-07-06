@@ -65,7 +65,8 @@ const UserSchema = new mongoose.Schema({
 		unique: true,
 		required: true,
 		trim: true,
-		validate: [ validateUsername, 'Username should only contain alphanumeric characters' ],
+		validate: [ { validator: validateUsername, msg: 'Username should only contain alphanumeric characters'},
+				{validator: validateIsNotTooLong, msg: 'Username should be maximum 30 characters'} ],
 	},
 	password: {
 		type: String,
@@ -89,46 +90,45 @@ const UserSchema = new mongoose.Schema({
 	},
 });
 
-//Hash the password before saving to the database
-UserSchema.pre('save', function(next){
+getHashedPassword = async function(password){
+	return await bcrypt.hash(password, 10);
+}
+
+//Hash the password before saving and updating the database
+UserSchema.pre('save', async function(next){
+	user = this;
+
 	//Avoid the password being hashed again if we are modifying other user fields
 	//https://stackoverflow.com/questions/45372509/mongoose-changes-password-every-time-i-save-with-pre-save-hook
-	if (!this.isModified('password')){
-		return next();
+	if(user.isModified('password')){
+		user.password = await getHashedPassword(user.password);	
+	}
+	return next();
+});
+
+UserSchema.pre('findOneAndUpdate', async function(next){
+	//We need this hook also for when the password is changed using findByIdAndUpdate
+	//Unfortunately, this hook doesn't give us easy access to the document, so we need
+	//to make a hack.
+	//https://stackoverflow.com/questions/72081894/how-to-update-bcrypt-password-with-prefindoneandupdate
+	const update = this.getUpdate();
+	if(update.password){
+		hash = await getHashedPassword(update.password);
+		this.setUpdate({$set: { password: hash }});
 	}
 
-	var user = this;
-	bcrypt.hash(user.password, 10, function(err, hash){
-		if(err){
-			return next(err);
-		}
-		user.password = hash;
-		next();
-	})
+	return next();
 });
 
 //Authenticate a client given username or email and pasword
-UserSchema.statics.authenticate = function(username, pass, callback){
-	User.findOne().or([{username: username},{email: username}])
-	.exec(function(err, user){
-		if(err){
-			return callback(err);
-		}else if(!user){
-			var err = new Error('Wrong username or password');
-			err.status = 401;
-			return callback(err);
-		}
+UserSchema.statics.authenticate = async function(username, pass, callback){
+	user = await User.findOne().or([{username: username},{email: username}])
+		.orFail(new Error('Invalid username or password'));
+	if(!await bcrypt.compare(pass, user.password)){
+		return new Error('Invalid username or password');
+	}
 
-		bcrypt.compare(pass, user.password, function (err, result) {
-			if(result === true){
-				return callback(null, user);
-			}else{
-				var err = new Error('Wrong username or password');
-				err.status = 400;
-				return callback(err);
-			}
-		})
-	});
+	return user;
 }
 
 

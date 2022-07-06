@@ -1,103 +1,36 @@
 const express = require('express');
 var router = express.Router();
 
-const requiresLogin = require('../middleware/requires_login.js');
-const requiresSession = require('../middleware/requires_session.js');
+const createUser = require('../app/controller/http/user/create.js');
+const getUser = require('../app/controller/http/user/get.js');
+const authenticateUser = require('../app/controller/http/user/authenticate.js');
+const validateEmail = require('../app/controller/http/user/validateEmail.js');
+const generateVerificationToken = require('../app/controller/http/user/generateVerificationToken.js');
+const requestPasswordChange = require('../app/controller/http/user/requestPasswordChange.js');
+const passwordChangeValidate = require('../app/controller/http/user/passwordChangeValidate.js');
+const passwordChange = require('../app/controller/http/user/passwordChange.js');
+const requestPasswordReset = require('../app/controller/http/user/requestPasswordReset.js');
+
 const redirectOnLogin = require('../middleware/redirect_on_login.js');
-const requiresUnverified = require('../middleware/requires_unverified.js');
-const User = require('../apps/user/user.js');
-
-const Token = require('../models/token.js');
-
-const Emailer = require('../email.js');
-
-function sendVerificationEmail(user, token, host){
-	var from = "fluento@fluento.es",
-		to = user.email,
-		subject = "Fluento email verification",
-		url = "https://" + host + "/user/verify/" + user._id + "/" + token.token;
-
-	Emailer.sendEmail(from, to, subject, url);
-}
-
-function sendPasswordChangeEmail(user, token, host){
-	var from = "fluento@fluento.es",
-		to = user.email,
-		subject = "Fluento password change",
-		url = "https://" + host + "/user/password/change/" + user._id + "/" + token.token;
-
-	Emailer.sendEmail(from, to, subject, url);
-}
-
-function sendPasswordChangedEmail(user){
-	var from = "fluento@fluento.es",
-		to = user.email,
-		subject = "Fluento password changed",
-		text = "Password changed successfully";
-
-	Emailer.sendEmail(from, to, subject, text);
-}
-
-router.get('/login', redirectOnLogin, (req, res, next) => {
-	return res.render('login')
-})
-
-router.post('/login', redirectOnLogin, (req, res, next) => {
-	if(!req.body.user || !req.body.pass){
-		var err = new Error("Fill in all the fields");
-		err.status = 401;
-		return next(err);
-	}
-
-	User.authenticateUser(req.body.user, req.body.pass, function(err, user){
-		if(err){
-			return next(err);
-		}else{
-			req.session.userId = user._id;
-			return res.redirect('/user/profile');
-		}
-	});
-})
+const requiresSession = require('../middleware/requires_session.js');
 
 router.get('/register', redirectOnLogin, (req, res, next) => {
-	return res.render('register')
+	return res.render('user/register')
 })
 
-router.post('/register', redirectOnLogin, (req, res, next) => {
-	var userData = {
-		email: req.body.email,
-		username: req.body.user,
-		password: req.body.pass,
-		password2: req.body.pass2,
-		registrationDate: new Date(),
-	}
 
-	User.createUser(userData, async function(err, user){
+router.post('/register', redirectOnLogin, (req, res, next) => {
+	createUser.execute(req, function(err, user){
 		if(err){
 			return next(err);
 		}
 
-		User.generateToken(user._id, "emailValidation", function(err, user, token){
-			if(err){
-				//TODO: Rollback user?
-				return next(err);
-			}
-
-			try{
-				sendVerificationEmail(user, token, req.headers.host);
-				req.session.userId = user._id;
-			}catch(err){
-				//TODO: Rollback user?
-				return next(err);
-			}
-
-			return res.redirect("/user/profile");
-		});
+		return res.redirect("/user/profile");
 	});
 })
 
 router.get('/verify/:userId/:tokenId', (req, res, next) => {
-	User.validateToken(req.params.userId, req.params.tokenId, "emailValidation", function(err, user){
+	validateEmail.execute(req, function(err){
 		if(err){
 			return next(err);
 		}
@@ -107,79 +40,23 @@ router.get('/verify/:userId/:tokenId', (req, res, next) => {
 })
 
 router.get('/verify/generate', requiresSession, (req, res, next) => {
-	User.generateToken(req.session.userId, "emailValidation", function(err, user, token){
+	generateVerificationToken.execute(req, function(err){
 		if(err){
-			next(err);
-		}
-
-		try{
-			sendVerificationEmail(user, token, req.headers.host);
-		}catch(err){
-			next(err);
+			return next(err);
 		}
 
 		return res.redirect('/user/profile');
 	});
 })
 
-router.get('/password/change/:userId/:tokenId', (req, res, next) => {
-	User.checkToken(req.params.userId, req.params.tokenId, "passwordReset", function(err, user, token){
-		if(err){
-			next(err);
-		}
-
-		return res.render('password_change', {user: user});
-	});
+router.get('/login', redirectOnLogin, (req, res, next) => {
+	return res.render('user/login')
 })
 
-router.post('/password/change/:userId/:tokenId', (req, res, next) => {
-	User.validateToken(req.params.userId, req.params.tokenId, "passwordReset", function(err, user){
-		User.modifyPassword(user, req.body.pass, req.body.pass2, function(err, user){
-			if(err){
-				return next(err);
-			}
-
-			try{
-				sendPasswordChangedEmail(user);
-			}catch(err){
-				return next(err);
-			}
-
-			return res.redirect('/');
-		});
-	});
-})
-
-router.get('/password/reset', (req, res) => {
-	res.render('password_reset');
-})
-
-router.post('/password/reset', (req, res, next) => {
-	User.resetPassword(req.body.username, function(err, user, token){
+router.post('/login', redirectOnLogin, (req, res, next) => {
+	authenticateUser.execute(req, function(err){
 		if(err){
 			return next(err);
-		}
-
-		try{
-			sendPasswordChangeEmail(user, token, req.headers.host);
-		}catch(err){
-			return next(err);
-		}
-
-		return res.send('Password reset link sent to your email');
-	});
-})
-
-router.get('/password/generate', requiresLogin, (req, res, next) => {
-	User.generateToken(req.session.userId, "passwordReset", function(err, user, token){
-		if(err){
-			next(err);
-		}
-
-		try{
-			sendPasswordChangeEmail(user, token, req.headers.host);
-		}catch(err){
-			next(err);
 		}
 
 		return res.redirect('/user/profile');
@@ -197,29 +74,57 @@ router.get('/logout', requiresSession, (req, res, next) => {
 })
 
 router.get('/profile', requiresSession, (req, res, next) => {
-	User.getUser(req.session.userId, function(err, user){
+	getUser.execute(req, function(err, user){
 		if(err){
 			return next(err);
 		}else{
-			return res.render('user', {user: user});
+			return res.render('user/user', {user: user});
 		}
 	});
 })
 
-router.delete('/delete', requiresLogin, (req, res, next) => {
-	User.deleteUser(req.session.userId, function(err, user){
+//TODO: This should require a session and an active user!
+router.get('/password/generate', requiresSession, (req, res, next) => {
+	requestPasswordChange.execute(req, function(err){
 		if(err){
 			return next(err);
-		}else{
-			//If succeeded destroy session
-			req.session.destroy(function(err){
-				if(err){
-					return next(err);
-				}else{
-					return res.redirect('/');
-				}
-			})
 		}
+
+		return res.send("Password change link sent to your email");
+	});
+})
+
+router.get('/password/change/:userId/:token', (req, res, next) => {
+	passwordChangeValidate.execute(req, function(err, user){
+		if(err){
+			return next(err);
+		}
+
+		return res.render('user/password_change', {user: user});
+	});
+})
+
+router.post('/password/change/:userId/:token', (req, res, next) => {
+	passwordChange.execute(req, function(err){
+		if(err){
+			return next(err);
+		}
+
+		return res.redirect('/');
+	});
+})
+
+router.get('/password/reset', (req, res) => {
+	res.render('user/password_reset');
+})
+
+router.post('/password/reset', (req, res, next) => {
+	requestPasswordReset.execute(req, function(err){
+		if(err){
+			return next(err);
+		}
+
+		return res.send('Password reset link sent to your email');
 	});
 })
 
