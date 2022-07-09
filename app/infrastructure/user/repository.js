@@ -14,7 +14,13 @@ module.exports.getByNameOrEmail = async function(username){
 }
 
 module.exports.authenticate = async function(userData){
-	return await User.authenticate(userData.username, userData.password);
+	user = await User.authenticate(userData.username, userData.password);
+	user.lastLogin = new Date();
+	//Do not validate, the password validation will fail since the hash
+	//is longer than the allowed password size
+	user.save({ validateBeforeSave: false });
+
+	return user;
 }
 
 module.exports.setIsVerified = async function(userId){
