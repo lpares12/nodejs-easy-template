@@ -11,8 +11,10 @@ const passwordChangeValidate = require('../app/controller/http/user/passwordChan
 const passwordChange = require('../app/controller/http/user/passwordChange.js');
 const requestPasswordReset = require('../app/controller/http/user/requestPasswordReset.js');
 
+const setUser = require('../middleware/set_user.js');
 const redirectOnLogin = require('../middleware/redirect_on_login.js');
 const requiresSession = require('../middleware/requires_session.js');
+const requiresVerified = require('../middleware/requires_verified.js');
 
 router.get('/register', redirectOnLogin, (req, res, next) => {
 	return res.render('user/register')
@@ -73,18 +75,11 @@ router.get('/logout', requiresSession, (req, res, next) => {
 	});
 })
 
-router.get('/profile', requiresSession, (req, res, next) => {
-	getUser.execute(req, function(err, user){
-		if(err){
-			return next(err);
-		}else{
-			return res.render('user/user', {user: user});
-		}
-	});
+router.get('/profile', setUser, (req, res, next) => {
+	return res.render('user/user', {user: req.user});
 })
 
-//TODO: This should require a session and an active user!
-router.get('/password/generate', requiresSession, (req, res, next) => {
+router.get('/password/generate', [setUser, requiresVerified], (req, res, next) => {
 	requestPasswordChange.execute(req, function(err){
 		if(err){
 			return next(err);
