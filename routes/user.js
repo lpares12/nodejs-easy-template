@@ -2,7 +2,6 @@ const express = require('express');
 var router = express.Router();
 
 const createUser = require('../app/controller/http/user/create.js');
-const getUser = require('../app/controller/http/user/get.js');
 const authenticateUser = require('../app/controller/http/user/authenticate.js');
 const validateEmail = require('../app/controller/http/user/validateEmail.js');
 const generateVerificationToken = require('../app/controller/http/user/generateVerificationToken.js');
@@ -15,6 +14,7 @@ const setUser = require('../middleware/set_user.js');
 const redirectOnLogin = require('../middleware/redirect_on_login.js');
 const requiresSession = require('../middleware/requires_session.js');
 const requiresVerified = require('../middleware/requires_verified.js');
+const requiresSubscription = require('../middleware/requires_subscription.js');
 
 router.get('/register', redirectOnLogin, (req, res, next) => {
 	return res.render('user/register')
@@ -76,7 +76,7 @@ router.get('/logout', requiresSession, (req, res, next) => {
 })
 
 router.get('/profile', setUser, (req, res, next) => {
-	return res.render('user/user', {user: req.user});
+	return res.render('user/user', {user: req.user, nowDate: new Date()});
 })
 
 router.get('/password/generate', [setUser, requiresVerified], (req, res, next) => {
@@ -121,6 +121,10 @@ router.post('/password/reset', (req, res, next) => {
 
 		return res.send('Password reset link sent to your email');
 	});
+})
+
+router.get('/test', [setUser, requiresSubscription], (req, res, next) => {
+	return res.send("Hello, it worked!");
 })
 
 module.exports = router;

@@ -2,7 +2,6 @@ const express = require('express');
 const nunjucks = require('nunjucks');
 const sessions = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(sessions);
-const cookieParser = require("cookie-parser");
 
 const app = express();
 
@@ -25,9 +24,14 @@ nunjucks.configure('views', {
 /////
 // Parser
 /////
-app.use(express.json());
+app.use((req, res, next) => {
+	if(req.originalUrl === '/subscription/stripe/webhook'){
+		next();
+	}else{
+		express.json()(req, res, next);
+	}
+});
 app.use(express.urlencoded({ extended: true })); //for parsing application/x-www-form-urlencoded
-app.use(cookieParser());
 
 
 /////
@@ -84,15 +88,21 @@ try{
 	console.log("Could not setup emailer: " + error);
 }
 
+/////
+// Initialize stripe interface
+/////
+stripe = require("./app/infrastructure/utils/stripe.js");
+stripe.setUp();
 
 /////
 // Load Routes
 /////
 var router = require('./routes/routes');
 var userRouter = require('./routes/user');
+var subscriptionRouter = require('./routes/subscription');
 app.use('/', router);
 app.use('/user', userRouter);
-
+app.use('/subscription', subscriptionRouter);
 
 /////
 // Server start
