@@ -88,6 +88,25 @@ const UserSchema = new mongoose.Schema({
 		required: true,
 		default: false,
 	},
+
+	//Plan information
+	plan: {
+		type: String,
+		enum: ['none', 'basic'],
+		default: 'none'
+	},
+	subscriptionEndDate: {
+		type: Date,
+		default: null,
+	},
+	stripeId: {
+		type: String,
+		default: null,
+	},
+	membershipCancelled: {
+		type: Boolean,
+		default: false,
+	},
 });
 
 getHashedPassword = async function(password){

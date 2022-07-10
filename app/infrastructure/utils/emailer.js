@@ -47,6 +47,21 @@ var Emailer = {
 		this.sendEmail(user.email, "Password changed",
 			user.username + " your password has been changed");
 	},
+
+	sendUpcomingInvoice: async function(name, email, invoiceData){
+		this.sendEmail(invoiceData['email'], "Subscription invoice",
+			name + " your subscription will be updated on " + invoiceData['date'] + " and you will be charged " + invoiceData['total'] + invoiceData['currency']);
+	},
+
+	sendInvoice: async function(name, email, invoiceData){
+		this.sendEmail(invoiceData['email'], "Subscription invoice",
+			name + " your subscription has been updated on " + invoiceData['date'] + " and you have been charged " + invoiceData['total'] + invoiceData['currency']);
+	},
+
+	sendInvoiceNotPaid: async function(name, email, invoiceData){
+		this.sendEmail(invoiceData['email'], "Subscription renewal failed",
+			name + " your subscription could not be updated because the payment failed on " + invoiceData['date'] + " for a total of " + invoiceData['total'] + invoiceData['currency'] + ". Make sure your card is not expired and you have enough funds for the transaction");
+	},
 }
 
 module.exports = Emailer;
