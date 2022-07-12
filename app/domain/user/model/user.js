@@ -45,8 +45,15 @@ var validateUsername = function(username){
 	return false;
 }
 
-var validateIsNotTooLong = function(data){
-	if(data.length > 30){
+var validatePasswordLength = function(data){
+	if(!data || data.length > 30 || data.length < 6){
+		return false;
+	}
+	return true;
+}
+
+var validateUsernameLength = function(data){
+	if(!data || data.length > 20 || data.length < 6){
 		return false;
 	}
 	return true;
@@ -65,14 +72,17 @@ const UserSchema = new mongoose.Schema({
 		unique: true,
 		required: true,
 		trim: true,
-		validate: [ { validator: validateUsername, msg: 'Username should only contain alphanumeric characters'},
-				{validator: validateIsNotTooLong, msg: 'Username should be maximum 30 characters'} ],
+		validate: [ { validator: validateUsername, msg: 'should only contain alphanumeric characters'},
+				{validator: validateUsernameLength, msg: 'should be between 4 and 20 characters'} ],
 	},
 	password: {
 		type: String,
 		required: true,
-		validate: [ { validator: validatePassword, msg: 'Password should contain alphanumeric characters and one special character' },
-				{ validator: validateIsNotTooLong, msg: 'Password should not be longer than 30 characters' }],
+		validate: [ { validator: validatePassword, msg: 'should contain alphanumeric characters and one special character' },
+				{ validator: validatePasswordLength, msg: 'should be between 6 and 30 characters' }],
+		//NOTE: Do not return the password when querying user
+		//https://stackoverflow.com/a/12096922/3770881
+		select: false,
 	},
 	registrationDate: {
 		type: Date,
@@ -125,6 +135,11 @@ UserSchema.pre('save', async function(next){
 	return next();
 });
 
+UserSchema.post('save', function(doc){
+	//delete doc['password'];
+	doc.password = null;
+});
+
 UserSchema.pre('findOneAndUpdate', async function(next){
 	//We need this hook also for when the password is changed using findByIdAndUpdate
 	//Unfortunately, this hook doesn't give us easy access to the document, so we need
@@ -132,6 +147,15 @@ UserSchema.pre('findOneAndUpdate', async function(next){
 	//https://stackoverflow.com/questions/72081894/how-to-update-bcrypt-password-with-prefindoneandupdate
 	const update = this.getUpdate();
 	if(update.password){
+		//Run manual password validation here since doing it in the DB call
+		//with {runValidators: true} is not effective, since the validators are run
+		//after the password is hashed, hence the long password validator will fail
+		if(!validatePassword(update.password)){
+			next(new Error('Validation failed: password: should have alphanumeric values, a capital and non-capital letter and a special character'));
+		}else if(!validatePasswordLength(update.password)){
+			next(new Error('Validation failed: password: length should be between 6 and 30 characters'));
+		}
+
 		hash = await getHashedPassword(update.password);
 		this.setUpdate({$set: { password: hash }});
 	}
@@ -141,15 +165,14 @@ UserSchema.pre('findOneAndUpdate', async function(next){
 
 //Authenticate a client given username or email and pasword
 UserSchema.statics.authenticate = async function(username, pass, callback){
-	user = await User.findOne().or([{username: username},{email: username}])
+	user = await User.findOne().select('+password').or([{username: username},{email: username}])
 		.orFail(new Error('Invalid username or password'));
 	if(!await bcrypt.compare(pass, user.password)){
-		return new Error('Invalid username or password');
+		throw new Error('Invalid username or password');
 	}
 
 	return user;
 }
-
 
 const User = mongoose.model('User', UserSchema);
 module.exports = User;
