@@ -50,6 +50,8 @@ var db = mongoose.connection;
 
 //Handle connection error
 db.on('error', console.error.bind(console, 'connection error:'));
+db.on('close', () => { console.log(' lost DB connection'); });
+db.on('reconnect', () => { console.log(' reconnected to DB'); });
 db.once('open', function(){
 	console.log("Connected to DB");
 });
