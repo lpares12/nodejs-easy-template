@@ -24,4 +24,16 @@ router.post('/contact', (req, res) => {
 	
 })
 
+router.get('/tos', (req, res) => {
+	return res.render('tos');
+});
+
+router.get('/privacy', (req, res) => {
+	return res.render('privacyPolicy');
+});
+
+router.get('/cookies', (req, res) => {
+	return res.render('cookiePolicy');
+});
+
 module.exports = router;

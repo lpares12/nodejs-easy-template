@@ -53,7 +53,7 @@ var validatePasswordLength = function(data){
 }
 
 var validateUsernameLength = function(data){
-	if(!data || data.length > 20 || data.length < 6){
+	if(!data || data.length > 20 || data.length < 4){
 		return false;
 	}
 	return true;
