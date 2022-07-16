@@ -1,6 +1,9 @@
 const nodemailer = require('nodemailer');
 
 var Emailer = {
+	APP_PROTOCOL: process.env.APP_PROTOCOL,
+	APP_HOST: process.env.APP_HOST,
+
 	setUp: function(){
 		this.transporter = nodemailer.createTransport({
 			host: process.env.EMAIL_HOST,
@@ -31,16 +34,21 @@ var Emailer = {
 
 	sendVerificationEmail: async function(user, token){
 		this.sendEmail(user.email, "Email verification",
-			APP_PROTOCOL + "://" + APP_HOST + "/user/verify/" + user._id + "/" + token.token);
+			this.APP_PROTOCOL + "://" + this.APP_HOST + "/user/verify/" + user._id + "/" + token.token);
 	},
 
 	sendVerifiedEmail: async function(user){
-		this.sendEmail(user.email, "Email verified", "Hello " + user.username + ", you have succesfuly verified your email");
+		try{
+			this.sendEmail(user.email, "Email verified", "Hello " + user.username + ", you have succesfuly verified your email");
+		}catch(err){
+			//Fail silently. Do not pass this error to the client, we don't care
+			console.log(err);
+		}
 	},
 
 	sendPasswordChangeEmail: async function(user, token){
 		this.sendEmail(user.email, "Password change request",
-			APP_PROTOCOL + "://" + APP_HOST + "/user/password/change/" + user._id + "/" + token.token);
+			this.APP_PROTOCOL + "://" + this.APP_HOST + "/user/password/change/" + user._id + "/" + token.token);
 	},
 
 	sendPasswordChangedEmail: async function(user){
@@ -49,18 +57,33 @@ var Emailer = {
 	},
 
 	sendUpcomingInvoice: async function(name, email, invoiceData){
-		this.sendEmail(invoiceData['email'], "Subscription invoice",
-			name + " your subscription will be updated on " + invoiceData['date'] + " and you will be charged " + invoiceData['total'] + invoiceData['currency']);
+		try{
+			this.sendEmail(invoiceData['email'], "Subscription invoice",
+				name + " your subscription will be updated on " + invoiceData['date'] + " and you will be charged " + invoiceData['total'] + invoiceData['currency']);
+		}catch(err){
+			//Fail silently. Do not pass this error to the client, we don't care
+			console.log(err);
+		}
 	},
 
 	sendInvoice: async function(name, email, invoiceData){
-		this.sendEmail(invoiceData['email'], "Subscription invoice",
-			name + " your subscription has been updated on " + invoiceData['date'] + " and you have been charged " + invoiceData['total'] + invoiceData['currency']);
+		try{
+			this.sendEmail(invoiceData['email'], "Subscription invoice",
+				name + " your subscription has been updated on " + invoiceData['date'] + " and you have been charged " + invoiceData['total'] + invoiceData['currency']);
+		}catch(err){
+			//Fail silently. Do not pass this error to the client, we don't care
+			console.log(err);
+		}
 	},
 
 	sendInvoiceNotPaid: async function(name, email, invoiceData){
-		this.sendEmail(invoiceData['email'], "Subscription renewal failed",
-			name + " your subscription could not be updated because the payment failed on " + invoiceData['date'] + " for a total of " + invoiceData['total'] + invoiceData['currency'] + ". Make sure your card is not expired and you have enough funds for the transaction");
+		try{
+			this.sendEmail(invoiceData['email'], "Subscription renewal failed",
+				name + " your subscription could not be updated because the payment failed on " + invoiceData['date'] + " for a total of " + invoiceData['total'] + invoiceData['currency'] + ". Make sure your card is not expired and you have enough funds for the transaction");
+		}catch(err){
+			//Fail silently. Do not pass this error to the client, we don't care
+			console.log(err);
+		}
 	},
 
 	sendContactEmail: async function(emailData){

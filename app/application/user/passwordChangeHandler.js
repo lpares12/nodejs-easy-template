@@ -8,7 +8,7 @@ module.exports = async function(commandData){
 		//Send email
 		//TODO: Make this as an event and create a command sendPasswordChangedEmail
 		//that will be subscribed to those events
-		emailer.sendPasswordChangedEmail(user);
+		await emailer.sendPasswordChangedEmail(user);
 	}catch(err){
 		throw err;
 	}

@@ -7,7 +7,6 @@ module.exports = async function(commandData){
 		const eventData = await stripe.processEvent(commandData);
 
 		if(eventData){
-			console.log(eventData);
 			switch(eventData.type){
 				case 'subscriptionCreated':
 					if(eventData['active']){
