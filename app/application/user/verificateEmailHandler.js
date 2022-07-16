@@ -3,9 +3,6 @@ emailer = require('../../infrastructure/utils/emailer.js');
 stripe = require('../../infrastructure/utils/stripe.js');
 
 module.exports = async function(commandData){
-	const host = commandData['host'];
-	delete commandData['host'];
-
 	try{
 		await repository.validateToken(commandData);
 
@@ -16,7 +13,7 @@ module.exports = async function(commandData){
 		await repository.setStripeId(user._id, customer.id);
 
 		//Send email, TODO: move to an event
-		emailer.sendVerifiedEmail(user, host);
+		emailer.sendVerifiedEmail(user);
 	}catch(err){
 		throw err;
 	}

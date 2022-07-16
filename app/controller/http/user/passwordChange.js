@@ -4,7 +4,7 @@ passwordChangeHandler = require('../../../application/user/passwordChangeHandler
 module.exports.execute = async function(req, callback){
 	//Execute command
 	try{
-		const command = passwordChange(req.params.userId, req.params.token, req.body.pass, req.body.pass2, req.headers.host);
+		const command = passwordChange(req.params.userId, req.params.token, req.body.pass, req.body.pass2);
 		user = await passwordChangeHandler(command);
 	}catch(err){
 		return callback(err);

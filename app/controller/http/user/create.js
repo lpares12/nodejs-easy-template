@@ -4,7 +4,7 @@ createHandler = require('../../../application/user/createHandler.js');
 module.exports.execute = async function(req, callback){
 	//Execute command
 	try{
-		const command = create(req.body.user, req.body.email, req.body.pass, req.body.pass2, req.headers.host);
+		const command = create(req.body.user, req.body.email, req.body.pass, req.body.pass2);
 		user = await createHandler(command);
 
 		//Set the session

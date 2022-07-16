@@ -4,7 +4,7 @@ generateTokenHandler = require('../../../application/user/generateTokenHandler.j
 module.exports.execute = async function(req, callback){
 	//Execute command
 	try{
-		const command = generateToken(req.session.userId, req.headers.host);
+		const command = generateToken(req.session.userId);
 		await generateTokenHandler(command);
 	}catch(err){
 		return callback(err);

@@ -29,21 +29,21 @@ var Emailer = {
 		})
 	},
 
-	sendVerificationEmail: async function(user, token, host){
+	sendVerificationEmail: async function(user, token){
 		this.sendEmail(user.email, "Email verification",
-			"https://" + host + "/user/verify/" + user._id + "/" + token.token);
+			APP_PROTOCOL + "://" + APP_HOST + "/user/verify/" + user._id + "/" + token.token);
 	},
 
-	sendVerifiedEmail: async function(user, host){
+	sendVerifiedEmail: async function(user){
 		this.sendEmail(user.email, "Email verified", "Hello " + user.username + ", you have succesfuly verified your email");
 	},
 
-	sendPasswordChangeEmail: async function(user, token, host){
+	sendPasswordChangeEmail: async function(user, token){
 		this.sendEmail(user.email, "Password change request",
-			"https://" + host + "/user/password/change/" + user._id + "/" + token.token);
+			APP_PROTOCOL + "://" + APP_HOST + "/user/password/change/" + user._id + "/" + token.token);
 	},
 
-	sendPasswordChangedEmail: async function(user, host){
+	sendPasswordChangedEmail: async function(user){
 		this.sendEmail(user.email, "Password changed",
 			user.username + " your password has been changed");
 	},

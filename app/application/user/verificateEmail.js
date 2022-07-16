@@ -1,12 +1,11 @@
-module.exports = function(userId, token, host){
-	if(!userId || !token || !host){
-		throw new Error('User, token and host must be filled');
+module.exports = function(userId, token){
+	if(!userId || !token){
+		throw new Error('User and token must be filled');
 	}
 
 	return {
 		'userId': userId,
 		'token': token,
-		'host': host,
 		'type': 'emailValidation',
 	}
 }

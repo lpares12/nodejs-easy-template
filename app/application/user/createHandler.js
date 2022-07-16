@@ -2,9 +2,6 @@ repository = require('../../infrastructure/user/repository.js');
 emailer = require('../../infrastructure/utils/emailer.js');
 
 module.exports = async function(commandData){
-	const host = commandData['host']
-	delete commandData['host']
-
 	//Call infra
 	user = await repository.save(commandData);
 
@@ -14,7 +11,7 @@ module.exports = async function(commandData){
 		//Send email
 		//TODO: Make this as an event and create a command sendVerificationEmail
 		//that will be subscribed to those events
-		emailer.sendVerificationEmail(user, token, host);
+		emailer.sendVerificationEmail(user, token);
 	}catch(err){
 		//Fail silently, we do not care
 		console.log(err);

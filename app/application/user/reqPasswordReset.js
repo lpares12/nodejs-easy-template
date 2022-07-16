@@ -1,11 +1,10 @@
-module.exports = function(username, host){
-	if(!username || !host){
-		throw new Error('Username and host can not be empty');
+module.exports = function(username){
+	if(!username){
+		throw new Error('Username can not be empty');
 	}
 
 	return {
 		'username': username,
-		'host': host,
 		'type': 'passwordReset',
 	}
 }

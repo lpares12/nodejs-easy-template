@@ -1,11 +1,10 @@
-module.exports = function(userId, host){
-	if(!userId || !host){
-		return new Error('Invalid user id or host');
+module.exports = function(userId){
+	if(!userId){
+		return new Error('Invalid user id');
 	}
 
 	return {
 		'userId': userId,
-		'host': host,
 		'type': 'emailValidation',
 	}
 }

@@ -4,7 +4,7 @@ reqPasswordResetHandler = require('../../../application/user/reqPasswordResetHan
 module.exports.execute = async function(req, callback){
 	//Execute command
 	try{
-		const command = reqPasswordReset(req.body.username, req.headers.host);
+		const command = reqPasswordReset(req.body.username);
 		await reqPasswordResetHandler(command);
 	}catch(err){
 		return callback(err);

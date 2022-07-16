@@ -4,7 +4,7 @@ validateEmailHandler = require('../../../application/user/verificateEmailHandler
 module.exports.execute = async function(req, callback){
 	//Execute command
 	try{
-		const command = validateEmail(req.params.userId, req.params.tokenId, req.headers.host);
+		const command = validateEmail(req.params.userId, req.params.tokenId);
 		await validateEmailHandler(command);
 	}catch(err){
 		return callback(err);
