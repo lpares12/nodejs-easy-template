@@ -54,3 +54,7 @@ Also, for the webhook to work we will need to call in another terminal:
 ```
 stripe listen --forward-to localhost:5656/subscription/stripe/webhook
 ```
+
+## Set up
+
+You should copy `.env.example` file and modify the variables according to your setup.
