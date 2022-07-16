@@ -12,9 +12,9 @@ var Emailer = {
 		})
 	},
 
-	sendEmail: function(to, subject, text){
+	sendEmail: function(to, subject, text, from=process.env.EMAIL){
 		message = {
-			from: "email@email.com",
+			from: from,
 			to: to,
 			subject: subject,
 			text: text
@@ -61,6 +61,11 @@ var Emailer = {
 	sendInvoiceNotPaid: async function(name, email, invoiceData){
 		this.sendEmail(invoiceData['email'], "Subscription renewal failed",
 			name + " your subscription could not be updated because the payment failed on " + invoiceData['date'] + " for a total of " + invoiceData['total'] + invoiceData['currency'] + ". Make sure your card is not expired and you have enough funds for the transaction");
+	},
+
+	sendContactEmail: async function(emailData){
+		this.sendEmail(process.env.EMAIL, emailData['subject'],
+			"Message by " + emailData['name'] + "(" + emailData['email'] + "):\n" + emailData['message']);
 	},
 }
 
