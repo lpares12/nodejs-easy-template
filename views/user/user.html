@@ -1,30 +1,26 @@
-<html>
-<head>
-	<title>EasyTemplate</title>
-</head>
-<body>
-	<p>Hello {{ user.username }}. To log out click <a href="/user/logout">here</a></p>
-	{% if user.isVerified %}
-	<p>If you wish to change your password click <a href="/user/password/generate">here</a></p>
+{% extends "base.html" %}
+{% block content %}
+<p>Hello {{ user.username }}. To log out click <a href="/user/logout">here</a></p>
+{% if user.isVerified %}
+<p>If you wish to change your password click <a href="/user/password/generate">here</a></p>
 
-	{% if user.subscriptionEndDate > nowDate %}
-	{% if user.plan == 'none' %}
-	<p>You are currently on a trial that ends on {{ user.subscriptionEndDate }}</p>
-	<p>To purchase a new subscription click <a href="/subscription/checkout/">here</a></p>
-	{% else %}
-	<p>You have an active subscription that ends on {{ user.subscriptionEndDate }}</p>
-	<p>To manage your subscription click <a href="/subscription/manage">here</a></p>
-	{% endif %}
-	{% else %}
-	<p>You don't have an active subscription</p>
-	<p>To purchase a new subscription click <a href="/subscription/checkout/">here</a></p>
-	{% endif %}
+{% if user.subscriptionEndDate > nowDate %}
+{% if user.plan == 'none' %}
+<p>You are currently on a trial that ends on {{ user.subscriptionEndDate }}</p>
+<p>To purchase a new subscription click <a href="/subscription/checkout/">here</a></p>
+{% else %}
+<p>You have an active subscription that ends on {{ user.subscriptionEndDate }}</p>
+<p>To manage your subscription click <a href="/subscription/manage">here</a></p>
+{% endif %}
+{% else %}
+<p>You don't have an active subscription</p>
+<p>To purchase a new subscription click <a href="/subscription/checkout/">here</a></p>
+{% endif %}
 
-	{% else %}
-	<p>Please verify your account with the email we sent to {{ user.email }}. If you did not receive anything, click <a href="/user/verify/generate">here</a></p>
-	{% if user.subscriptionEndDate > nowDate %}
-	<p>You are currently on a trial that ends on {{ user.subscriptionEndDate }}. You can only become a member after you have verified your email</p>
-	{% endif %}
-	{% endif %}
-</body>
-</html>
+{% else %}
+<p>Please verify your account with the email we sent to {{ user.email }}. If you did not receive anything, click <a href="/user/verify/generate">here</a></p>
+{% if user.subscriptionEndDate > nowDate %}
+<p>You are currently on a trial that ends on {{ user.subscriptionEndDate }}. You can only become a member after you have verified your email</p>
+{% endif %}
+{% endif %}
+{% endblock %}

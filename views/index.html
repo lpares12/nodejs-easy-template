@@ -1,16 +1,6 @@
-<html>
-<head>
-	<title>EasyTemplate</title>
-	<script src="/js/cookies.js"></script>
-</head>
-<body>
-	{% include "cookieBanner.html" %}
-	<p>Welcome to EasyTemplate</p>
-	<p>To login click <a href="/user/login">here</a></p>
-	<p>To register click <a href="/user/register">here</a></p>
-
-	<script>
-		new CookiesBanner();
-	</script>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<p>Welcome to EasyTemplate</p>
+<p>To login click <a href="/user/login">here</a></p>
+<p>To register click <a href="/user/register">here</a></p>
+{% endblock %}

@@ -1,16 +1,10 @@
-<html>
-<head>
-	<title>EasyTemplate</title>
-</head>
-<body>
-	<p>Welcome to EasyTemplate</p>
-	<p>Contact form</p>
-	<form action="/contact" method="post">
-		<input type="text" name="name" id="name" placeholder="Name" required>
-		<input type="email" name="email" id="email" placeholder="Email" required>
-		<input type="text" name="subject" id="subject" placeholder="Subject" required>
-		<input type="text" name="message" id="message" placeholder="Message" required>
-		<input type="submit" value="Submit">
-	</form>
-</body>
-</html>
+{% extends "base.html" %}
+<p>Contact form</p>
+<form action="/contact" method="post">
+	<input type="text" name="name" id="name" placeholder="Name" required>
+	<input type="email" name="email" id="email" placeholder="Email" required>
+	<input type="text" name="subject" id="subject" placeholder="Subject" required>
+	<input type="text" name="message" id="message" placeholder="Message" required>
+	<input type="submit" value="Submit">
+</form>
+{% endblock %}

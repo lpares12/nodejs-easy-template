@@ -1,17 +1,12 @@
-<html>
-<head>
-	<title>EasyTemplate</title>
-</head>
-<body>
-	<p>Welcome to EasyTemplate</p>
-	<p>Please register</p>
-	<form action="/user/register" method="post">
-		<input type="text" name="user" id="user" placeholder="Username">
-		<input type="email" name="email" id="email" placeholder="Email">
-		<input type="password" name="pass" id="pass" placeholder="Password">
-		<input type="password" name="pass2" id="pass2" placeholder="Password">
-		<input type="checkbox" name="terms" id="terms" required> Agreed to <a href="/tos" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
-		<input type="submit" value="Register">
-	</form>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<p>Please register</p>
+<form action="/user/register" method="post">
+	<input type="text" name="user" id="user" placeholder="Username">
+	<input type="email" name="email" id="email" placeholder="Email">
+	<input type="password" name="pass" id="pass" placeholder="Password">
+	<input type="password" name="pass2" id="pass2" placeholder="Password">
+	<input type="checkbox" name="terms" id="terms" required> Agreed to <a href="/tos" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+	<input type="submit" value="Register">
+</form>
+{% endblock %}
